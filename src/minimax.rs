@@ -52,15 +52,50 @@ impl Minimax {
     fn search(&self, board: &mut Board, depth: usize) -> i32 {
         // Checkpoint 2. The recursive part.
         //   1. If the game is over, the score is `board.score()`. Nothing to search.
+        if board.is_over(){
+            return board.score();
+        }
         //   2. If `depth` is 0, you have looked as far as you're allowed. Return the
         //      agent's guess: `(self.heuristic)(board)`. The parentheses around
         //      `self.heuristic` say "the function stored in this field", and the second
         //      pair calls it.
+        if depth == 0 {
+            return (self.heuristic)(board);
+        }
         //   3. Otherwise, for every legal move: apply it, call `search` on the result with
         //      one less depth, and undo it. X keeps the biggest score it sees, O the
         //      smallest. That is the whole algorithm.
         // `board.to_move()` tells you whose turn it is at this point in the search.
-        todo!("Checkpoint 2: search")
+        let mut best;
+
+        if board.to_move() == Player::X {
+            best = i32::MIN;
+        } 
+        else {
+            best = i32::MAX;
+        }
+        
+        
+        for position in board.moves() {
+            board.apply_move(position);
+
+        let score = self.search(board, depth - 1);
+
+        board.undo();
+
+        if board.to_move() == Player::X {
+            if score > best {
+                best = score;
+            }
+        } 
+        else {
+            if score < best {
+                best = score;
+            }
+        }
+        }
+
+        best
     }
 }
 
@@ -69,13 +104,57 @@ impl Agent for Minimax {
         self.label.clone()
     }
 
-    fn choose_move(&self, board: &Board, _time_limit: Duration) -> Position {
-        // Checkpoint 2. Same loop as `search`, except you keep the move, not just the score.
-        // `board` is borrowed, so clone it first to have one you can apply moves to.
-        // Applying a move here is the first level of the search, so call `search` with
-        // `self.max_depth - 1`. The constructors make sure `max_depth` is at least 1.
-        todo!("Checkpoint 2: choose_move")
+   
+fn choose_move(&self, board: &Board, _time_limit: Duration) -> Position {
+    // Clone the original board
+    let mut board = board.clone();
+
+    // turn
+    let player = board.to_move();
+
+    //legal moves
+    let moves = board.moves();
+
+    //first legal move
+    let mut best_move = moves[0];
+
+    //best score
+    let mut best_score = if player == Player::X {
+        i32::MIN
+    } else {
+        i32::MAX
+    };
+
+    //try every legal move
+    for position in moves {
+        // Apply the current move
+        board.apply_move(position);
+
+        //Search remaining depth
+        let score = self.search(&mut board, self.max_depth - 1);
+
+        // Undo the move afterward
+        board.undo();
+
+        // X wants the highest score
+        if player == Player::X {
+            if score > best_score {
+                best_score = score;
+                best_move = position;
+            }
+        } else {
+            // O wants the lowest score
+            if score < best_score {
+                best_score = score;
+                best_move = position;
+            }
+        }
     }
+
+    // Return the best position
+    best_move
+}
+
 }
 
 /// The simplest heuristic: who is ahead right now. Ours, kept so you have something to
