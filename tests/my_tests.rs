@@ -15,3 +15,20 @@ fn example_a_row_for_x() {
 }
 
 // Your tests go below. Give each one a name that says what it checks.
+#[test]
+fn example_a_diagonal_for_x() {
+    let board = Board::from_rows(&["X..", ".X.", "..X"]);
+    assert_eq!(board.score(), 1);
+}
+
+#[test]
+fn example_a_column_for_o() {
+    let board = Board::from_rows(&["O..", "O..", "O.."]);
+    assert_eq!(board.score(), -1);
+}
+
+#[test]
+fn example_both_diagonals_for_x() {
+    let board = Board::from_rows(&["X.X", ".X.", "X.X"]);
+    assert_eq!(board.score(), 2);
+}
